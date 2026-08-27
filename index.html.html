@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Opsonin SIM & Bill Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f0f2f5; color: #333; padding: 20px; }
+        .container { max-width: 1450px; margin: 0 auto; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { color: #004b87; margin-bottom: 20px; font-size: 24px; text-align: center; border-bottom: 2px solid #004b87; padding-bottom: 10px; }
+        
+        /* Tab Styles */
+        .tab-buttons { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-btn { padding: 12px 18px; border: none; background: #e9ecef; cursor: pointer; font-size: 14px; font-weight: bold; margin-right: 5px; margin-bottom: 5px; border-radius: 5px 5px 0 0; color: #555; }
+        .tab-btn.active { background: #004b87; color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        label { font-weight: bold; display: block; margin-bottom: 6px; color: #444; }
+        input[type="text"], input[type="file"], select { padding: 9px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; width: 100%; }
+        
+        .btn { background: #004b87; color: white; border: none; padding: 9px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500; }
+        .btn:hover { background: #00335e; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #bd2130; }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+
+        /* Replacement Block Styling */
+        .replacement-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-left: 5px solid #004b87;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .table-responsive { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+        table, th, td { border: 1px solid #aaa; }
+        th, td { padding: 7px 10px; text-align: center; }
+        th { background: #f1f5f9; color: #004b87; font-weight: bold; }
+        .concern-header-top { background: #e2e8f0; font-size: 14px; font-weight: bold; text-transform: uppercase; border-bottom: 2px solid #004b87; }
+
+        .status-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; font-weight: bold; float: right; }
+        .status-saved { background: #d4edda; color: #155724; }
+        .status-empty { background: #f8d7da; color: #721c24; }
+
+        .info-box { background: #eef6ff; border: 1px solid #b6d4fe; padding: 12px; border-radius: 4px; margin: 10px 0; text-align: left; }
+        textarea { width: 100%; height: 220px; padding: 10px; font-family: monospace; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; margin-top: 8px; }
+        
+        .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-top: 15px; }
+        .card { background: #f8fafc; padding: 15px; border-radius: 6px; border-left: 5px solid #004b87; box-shadow: 0 2px 5px rgba(0,0,0,0.05); text-align: left; }
+        .card h3 { font-size: 13px; color: #555; text-transform: uppercase; }
+        .card p { font-size: 22px; font-weight: bold; color: #004b87; margin-top: 6px; }
+        .card .sub-text { font-size: 12px; color: #777; margin-top: 4px; }
+
+        .val-plus { color: #00bfa5; font-weight: bold; }
+        .val-minus { color: #ff0055; font-weight: bold; }
+        .summary-reissue { color: #8a4b00; font-weight: bold; }
+        .summary-newnis { color: #7a1fa2; font-weight: bold; }
+        .summary-total-month { background: #e8f5e9; color: #155724; font-weight: bold; }
+        .email-preview {
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 22px;
+            margin-top: 8px;
+            min-height: 220px;
+            overflow-x: auto;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            line-height: 1.45;
+        }
+        .email-preview p { margin: 0 0 14px 0; }
+        .email-preview table {
+            border-collapse: collapse;
+            width: auto;
+            min-width: 720px;
+            margin: 14px 0 18px 0;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 11pt;
+            white-space: nowrap;
+        }
+        .email-preview th,
+        .email-preview td {
+            border: 1px solid #777;
+            padding: 7px 12px;
+            text-align: center;
+        }
+        .email-preview th {
+            background: #f2f2f2;
+            color: #222;
+            font-weight: bold;
+        }
+        .email-preview td:nth-child(2),
+        .email-preview th:nth-child(2) {
+            text-align: left;
+        }
+        .email-preview .email-signature { margin-top: 4px; }
+
+
+        .checkbox-group { display: flex; gap: 20px; background: #f8fafc; padding: 12px; border: 1px solid #ddd; border-radius: 4px; margin-top: 6px; }
+        .checkbox-item { display: flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; font-weight: bold; color: #004b87; }
+
+        /* Print Settings for Envelope #10 Landscape */
+        .print-section { display: none; }
+        @media print {
+            @page {
+                size: 9.5in 4.125in landscape; /* Auto Select Envelope #10 & Landscape */
+                margin: 0;
+            }
+            body { background: white; padding: 0; }
+            body * { visibility: hidden; }
+            .print-section, .print-section * { visibility: visible; }
+            .print-section { display: block; position: absolute; left: 0; top: 0; width: 100%; }
+            .envelope-page {
+                width: 9.5in;
+                height: 4.125in;
+                padding: 0.4in 0.6in;
+                box-sizing: border-box;
+                page-break-after: always;
+                font-family: 'Times New Roman', serif;
+                font-size: 11pt;
+                position: relative;
+            }
+            .env-from { position: absolute; left: 0.6in; top: 0.5in; }
+            .env-sim { position: absolute; left: 4.8in; top: 0.5in; font-weight: bold; }
+            .env-to { position: absolute; left: 4.8in; top: 1.2in; line-height: 1.4; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Opsonin SIM & Bill Management System</h1>
+
+    <!-- Navigation Tab Buttons -->
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab('statsTab', this)">Dashboard Statistics</button>
+        <button class="tab-btn" onclick="switchTab('searchTab', this)">Smart Search</button>
+        <button class="tab-btn" onclick="switchTab('uploadTab', this)">Upload & Storage</button>
+        <button class="tab-btn" onclick="switchTab('compareTab', this)">Advanced Comparison</button>
+        <button class="tab-btn" onclick="switchTab('summaryTab', this)">Monthly Summary Table</button>
+    </div>
+
+    <!-- 1. DASHBOARD STATISTICS -->
+    <div id="statsTab" class="tab-content active">
+        <h3 style="color: #004b87; text-align: left;">Concern-wise Active Ratio (Last Month vs Master List)</h3>
+        <div class="card-grid">
+            <div class="card">
+                <h3>OPL SIM Status</h3>
+                <p id="ratioOPL">0 out of 0</p>
+                <div class="sub-text">Last Month Active / Master Total</div>
+            </div>
+            <div class="card">
+                <h3>Agrovet SIM Status</h3>
+                <p id="ratioAgrovet">0 out of 0</p>
+                <div class="sub-text">Last Month Active / Master Total</div>
+            </div>
+            <div class="card">
+                <h3>OSL SIM Status</h3>
+                <p id="ratioOSL">0 out of 0</p>
+                <div class="sub-text">Last Month Active / Master Total</div>
+            </div>
+            <div class="card" style="border-left-color: #28a745;">
+                <h3>Total System Numbers</h3>
+                <p id="ratioTotal">0 out of 0</p>
+                <div class="sub-text">Combined Active Ratio</div>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 30px; color: #004b87; text-align: left;">Database Overview</h3>
+        <div class="card-grid">
+            <div class="card" style="border-left-color: #ffc107;">
+                <h3>Static Master List Records</h3>
+                <p id="statMasterTotal">0</p>
+            </div>
+            <div class="card" style="border-left-color: #17a2b8;">
+                <h3>Stored Monthly Bill Files</h3>
+                <p id="statTotalFiles">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. SMART SEARCH -->
+    <div id="searchTab" class="tab-content">
+        <div id="replacementContainer">
+            <!-- Dynamic Replacement Cards will be inserted here -->
+        </div>
+
+        <button class="btn btn-secondary" style="margin-bottom: 15px;" onclick="addNewReplacementBlock()">+ Add Another Replacement</button>
+
+        <div>
+            <button class="btn" onclick="generateEmailDraft()">Generate Email Draft</button>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Generated Email Format:</label>
+            <div id="emailDraftPreview" class="email-preview">
+                <span style="color:#888;">Click "Generate Email Draft" to create the email.</span>
+            </div>
+            <textarea id="emailDraftBox" readonly style="display:none;"></textarea>
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+                <button class="btn" onclick="copyEmail()">Copy Email</button>
+                <button class="btn btn-success" onclick="printEnvelope()">Print Envelopes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. UPLOAD & FILES STORAGE -->
+    <div id="uploadTab" class="tab-content">
+        <div class="info-box" style="background: #fff8e6; border-color: #ffeba8; margin-bottom: 25px;">
+            <h3 style="color: #856404; margin-bottom: 8px;">
+                Static Master SIM List Upload
+                <span id="masterStatusBadge" class="status-badge status-empty">No Data</span>
+            </h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 12px;">Upload master file containing total SIM inventory.</p>
+            <div class="form-group">
+                <input type="file" id="masterFileInput" accept=".xlsx, .xls">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-success" onclick="uploadMasterFile()">Save Master SIM List</button>
+                <button class="btn" onclick="downloadMasterFile()">Download Master File</button>
+            </div>
+        </div>
+
+        <div class="info-box" style="background: #fdf8ea; border-color: #f3d993;">
+            <h3 style="margin-bottom: 10px; color: #856404;">Upload Monthly Bill File</h3>
+            <div class="form-row">
+                <div style="flex: 1;">
+                    <label>Concern:</label>
+                    <select id="fileConcern">
+                        <option value="OPL">OPL</option>
+                        <option value="Agrovet">Agrovet</option>
+                        <option value="OSL">OSL</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>Month:</label>
+                    <select id="fileMonth">
+                        <option value="January">January</option><option value="February">February</option>
+                        <option value="March">March</option><option value="April">April</option>
+                        <option value="May">May</option><option value="June">June</option>
+                        <option value="July">July</option><option value="August">August</option>
+                        <option value="September">September</option><option value="October">October</option>
+                        <option value="November">November</option><option value="December">December</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>Year:</label>
+                    <input type="text" id="fileYear" value="2026">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Select File:</label>
+                <input type="file" id="monthlyBillFileInput" accept=".xlsx, .xls">
+            </div>
+            <button class="btn btn-success" onclick="uploadNewFile()">Save Monthly Bill File</button>
+        </div>
+
+        <h3 style="margin-top: 25px; color: #004b87; text-align: left;">Stored Monthly Bill Files</h3>
+        <table id="fileListTable">
+            <thead>
+                <tr>
+                    <th>Concern</th>
+                    <th>Month & Year</th>
+                    <th>Total Active Numbers</th>
+                    <th>Upload Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="fileListBody">
+                <tr><td colspan="5">No stored files found.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. ADVANCED COMPARISON -->
+    <div id="compareTab" class="tab-content">
+        <h3 style="text-align: left;">Two Months Direct Comparison</h3>
+        <div class="form-row" style="margin-top: 15px;">
+            <div style="flex: 1;">
+                <label>Base Month File:</label>
+                <select id="compareBaseSelect"></select>
+            </div>
+            <div style="flex: 1;">
+                <label>Target Month File:</label>
+                <select id="compareTargetSelect"></select>
+            </div>
+            <div style="flex: 0.5; display: flex; align-items: flex-end;">
+                <button class="btn" style="width: 100%;" onclick="executeComparison()">Compare Parameters</button>
+            </div>
+        </div>
+
+        <div id="comparisonResults" style="display: none; margin-top: 20px;">
+            <div class="card-grid">
+                <div class="card"><h3>Base Bill</h3><p id="cmpBaseBill">Tk. 0</p></div>
+                <div class="card"><h3>Target Bill</h3><p id="cmpTargetBill">Tk. 0</p></div>
+                <div class="card"><h3>Bill Difference</h3><p id="cmpBillDiff">Tk. 0</p></div>
+                <div class="card"><h3>SIM Count Diff</h3><p id="cmpSimDiff">0</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. MONTHLY SUMMARY TABLE -->
+    <div id="summaryTab" class="tab-content">
+        <h3 style="text-align: left; color: #004b87;">Multi-Concern Monthly Summary Report</h3>
+        <p style="font-size: 13px; color: #666; margin-top: 4px; text-align: left;">Select date range and concerns to generate a side-by-side comparative table. Email draft table contains only Mobile No and New Kit Number.</p>
+        
+        <div class="form-group" style="margin-top: 15px;">
+            <label>Select Concerns to Display:</label>
+            <div class="checkbox-group">
+                <label class="checkbox-item"><input type="checkbox" id="chkOPL" checked> OPL</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkOSL" checked> OSL</label>
+                <label class="checkbox-item"><input type="checkbox" id="chkAVT" checked> AVT (Agrovet)</label>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div style="flex: 1;">
+                <label>From Month & Year:</label>
+                <div style="display: flex; gap: 5px;">
+                    <select id="fromMonthSelect"></select>
+                    <select id="fromYearSelect"></select>
+                </div>
+            </div>
+            <div style="flex: 1;">
+                <label>To Month & Year:</label>
+                <div style="display: flex; gap: 5px;">
+                    <select id="toMonthSelect"></select>
+                    <select id="toYearSelect"></select>
+                </div>
+            </div>
+            <div style="flex: 0.8; display: flex; align-items: flex-end; gap: 10px;">
+                <button class="btn btn-success" style="flex: 1;" onclick="generateRangeSummaryTable()">Generate Report</button>
+                <button class="btn" style="flex: 1; background: #17a2b8;" onclick="exportSummaryToExcel()">Download Excel</button>
+            </div>
+        </div>
+
+        <div id="summaryTableWrapper" class="table-responsive" style="display: none;">
+            <table id="multiConcernTable">
+                <thead id="multiConcernThead"></thead>
+                <tbody id="multiConcernTbody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden Dynamic Container for Envelope Printing -->
+<div id="printArea" class="print-section"></div>
+
+<script>
+    let db;
+    let storedFiles = [];
+    let masterSimData = [];
+    let replacementCount = 0;
+
+    const monthList = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const yearList = ["2024", "2025", "2026", "2027", "2028"];
+
+    // IndexedDB Setup
+    const dbReq = indexedDB.open("OpsoninSIMSystemDB", 3);
+    dbReq.onupgradeneeded = function(e) {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("monthlyBills")) {
+            db.createObjectStore("monthlyBills", { keyPath: "id", autoIncrement: true });
+        }
+        if (!db.objectStoreNames.contains("masterList")) {
+            db.createObjectStore("masterList", { keyPath: "key" });
+        }
+    };
+    dbReq.onsuccess = function(e) {
+        db = e.target.result;
+        initDateDropdowns();
+        reloadStoredFiles();
+        loadMasterFileFromDB();
+        addNewReplacementBlock(); // Initial replacement block
+    };
+
+    // Tab Switcher Logic
+    function switchTab(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // Dynamic Multi-Replacement Blocks Creation
+    function addNewReplacementBlock() {
+        replacementCount++;
+        const id = replacementCount;
+        const container = document.getElementById('replacementContainer');
+
+        const card = document.createElement('div');
+        card.className = 'replacement-card';
+        card.id = `repBlock_${id}`;
+        card.setAttribute('data-emp', '{}');
+
+        card.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="color:#004b87;">Replacement Item #${id}</h4>
+                ${id > 1 ? `<button class="btn btn-danger btn-sm" onclick="removeReplacementBlock(${id})">Remove Item</button>` : ''}
+            </div>
+            <div class="form-row">
+                <input type="text" id="searchInput_${id}" placeholder="Enter E Code or Search Term (e.g., PE11458)..." style="flex: 1;">
+                <button class="btn" onclick="searchPECodeForBlock(${id})">Search Employee</button>
+            </div>
+            <div id="empBox_${id}" class="info-box" style="display:none;">
+                <p><strong>Name:</strong> <span id="empName_${id}">-</span> | <strong>E Code:</strong> <span id="empPE_${id}">-</span></p>
+                <p><strong>Mobile Number:</strong> <span id="empMobile_${id}">-</span></p>
+                <p><strong>Designation:</strong> <span id="empDesignation_${id}">-</span> | <strong>Department:</strong> <span id="empDept_${id}">-</span></p>
+                <p><strong>Territory:</strong> <span id="empTerri_${id}">-</span> | <strong>Area:</strong> <span id="empArea_${id}">-</span> | <strong>Region:</strong> <span id="empRegion_${id}">-</span></p>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>New Kit Number:</label>
+                <input type="text" id="kitInput_${id}" placeholder="Enter New Kit Number for this SIM...">
+            </div>
+        `;
+
+        container.appendChild(card);
+    }
+
+    function removeReplacementBlock(id) {
+        const block = document.getElementById(`repBlock_${id}`);
+        if (block) block.remove();
+    }
+
+    function searchPECodeForBlock(id) {
+        const query = document.getElementById(`searchInput_${id}`).value.trim().toLowerCase();
+        if (!query) return alert('Enter search term!');
+
+        let combinedData = [...masterSimData];
+        storedFiles.forEach(f => { combinedData = combinedData.concat(f.records); });
+
+        const selectedEmp = combinedData.find(row => 
+            Object.values(row).some(val => String(val).trim().toLowerCase().includes(query))
+        );
+
+        if (selectedEmp) {
+            const block = document.getElementById(`repBlock_${id}`);
+            block.setAttribute('data-emp', JSON.stringify(selectedEmp));
+
+            document.getElementById(`empBox_${id}`).style.display = 'block';
+            document.getElementById(`empName_${id}`).innerText = getFieldValue(selectedEmp, ['Employee_Name', 'Name', 'Emp Name']);
+            document.getElementById(`empPE_${id}`).innerText = getFieldValue(selectedEmp, ['E Code', 'PE Code', 'Code', 'ID']);
+            document.getElementById(`empMobile_${id}`).innerText = getFieldValue(selectedEmp, ['Number', 'Mobile', 'Phone', 'Cell']);
+            document.getElementById(`empDesignation_${id}`).innerText = getFieldValue(selectedEmp, ['Desig.', 'Designation', 'Desig', 'Role', 'Title']);
+            document.getElementById(`empDept_${id}`).innerText = getFieldValue(selectedEmp, ['Dept.', 'Department', 'Dept', 'Division']);
+            document.getElementById(`empTerri_${id}`).innerText = getFieldValue(selectedEmp, ['Terri. Name', 'Territory', 'Terri']);
+            document.getElementById(`empArea_${id}`).innerText = getFieldValue(selectedEmp, ['Area Name', 'Area']);
+            document.getElementById(`empRegion_${id}`).innerText = getFieldValue(selectedEmp, ['Region']);
+        } else {
+            alert('No matching employee found!');
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function generateEmailDraft() {
+        const blocks = document.querySelectorAll('.replacement-card');
+        let validReplacements = [];
+
+        blocks.forEach(block => {
+            const empDataStr = block.getAttribute('data-emp');
+            const kitInput = block.querySelector('.form-group input');
+            const kitNo = kitInput ? kitInput.value.trim() : '';
+
+            if (empDataStr && empDataStr !== '{}' && kitNo !== '') {
+                const emp = JSON.parse(empDataStr);
+
+                // Email draft intentionally uses ONLY Mobile Number and New Kit Number.
+                const mobile = getFieldValue(emp, ['Number', 'Mobile', 'Phone', 'Cell']);
+
+                validReplacements.push({
+                    mobile: mobile,
+                    kit: kitNo
+                });
+            }
+        });
+
+        if (validReplacements.length === 0) {
+            return alert('Please search employee and enter Kit Number for at least one replacement!');
+        }
+
+        let tableRows = '';
+        validReplacements.forEach(item => {
+            tableRows += `
+                <tr>
+                    <td>${escapeHtml(item.mobile)}</td>
+                    <td>${escapeHtml(item.kit)}</td>
+                </tr>
+            `;
+        });
+
+        const emailHtml = `
+            <div style="font-family:'Times New Roman', Times, serif; font-size:11pt; color:#000; line-height:1.45;">
+                <p><strong>Dear Team,</strong><br>
+                Greetings from Opsonin Pharma.</p>
+
+                <p>Please process the SIM replacement(s) according to the details below:</p>
+
+                <table style="border-collapse:collapse; border:1px solid #777; font-family:'Times New Roman', Times, serif; font-size:11pt;">
+                    <thead>
+                        <tr>
+                            <th style="border:1px solid #777; padding:7px 12px; background:#f2f2f2;">Mobile No</th>
+                            <th style="border:1px solid #777; padding:7px 12px; background:#f2f2f2;">New Kit Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+
+                <p>We would appreciate it if you could initiate the replacement process at your earliest convenience.<br>
+                Thank you.</p>
+
+                <p>Best Regards,<br>
+                Opsonin Telecommunication Department</p>
+            </div>
+        `;
+
+        // Plain-text fallback also contains only the two requested columns.
+        let plainRows = '';
+        validReplacements.forEach(item => {
+            plainRows += `${item.mobile} | ${item.kit}\n`;
+        });
+
+        const plainText = `Dear Team,
+Greetings from Opsonin Pharma.
+
+Please process the SIM replacement(s) according to the details below:
+
+Mobile No | New Kit Number
+${plainRows}
+We would appreciate it if you could initiate the replacement process at your earliest convenience.
+Thank you.
+
+Best Regards,
+Opsonin Telecommunication Department`;
+
+        document.getElementById('emailDraftPreview').innerHTML = emailHtml;
+        document.getElementById('emailDraftBox').value = plainText;
+    }
+
+    function printEnvelope() {
+        const blocks = document.querySelectorAll('.replacement-card');
+        const printArea = document.getElementById('printArea');
+        printArea.innerHTML = '';
+        let printedCount = 0;
+
+        blocks.forEach(block => {
+            const empDataStr = block.getAttribute('data-emp');
+            const kitNo = block.querySelector('.form-group input').value.trim();
+
+            if (empDataStr && empDataStr !== '{}' && kitNo !== '') {
+                const emp = JSON.parse(empDataStr);
+                printedCount++;
+
+                const page = document.createElement('div');
+                page.className = 'envelope-page';
+                page.innerHTML = `
+                    <div class="env-from"><strong>From</strong><br><strong>Human Resources Department</strong></div>
+                    <div class="env-sim">Mobile Number: ${getFieldValue(emp, ['Number', 'Mobile', 'Phone', 'Cell'])}</div>
+                    <div class="env-to">
+                        <strong>To</strong><br>
+                        <strong>Name: ${getFieldValue(emp, ['Employee_Name', 'Name', 'Emp Name'])} (${getFieldValue(emp, ['E Code', 'PE Code', 'Code', 'ID'])})</strong><br>
+                        <strong>Designation: ${getFieldValue(emp, ['Desig.', 'Designation', 'Desig'])}</strong><br>
+                        <strong>Department: ${getFieldValue(emp, ['Dept.', 'Department', 'Dept'])}</strong><br>
+                        <strong>Terri. Name: ${getFieldValue(emp, ['Terri. Name', 'Territory', 'Terri'])}</strong><br>
+                        <strong>Area Name: ${getFieldValue(emp, ['Area Name', 'Area'])}</strong><br>
+                        <strong>Region: ${getFieldValue(emp, ['Region'])}</strong>
+                    </div>
+                `;
+                printArea.appendChild(page);
+            }
+        });
+
+        if (printedCount === 0) return alert('Please search employee and enter Kit Number to print envelopes!');
+
+        window.print();
+    }
+
+    function initDateDropdowns() {
+        const fM = document.getElementById('fromMonthSelect');
+        const tM = document.getElementById('toMonthSelect');
+        const fY = document.getElementById('fromYearSelect');
+        const tY = document.getElementById('toYearSelect');
+
+        monthList.forEach((m, idx) => {
+            fM.appendChild(new Option(m, idx));
+            tM.appendChild(new Option(m, idx));
+        });
+
+        yearList.forEach(y => {
+            fY.appendChild(new Option(y, y));
+            tY.appendChild(new Option(y, y));
+        });
+
+        fM.value = 0; fY.value = "2025";
+        tM.value = 11; tY.value = "2026";
+    }
+
+    function parseAllWorkbookSheets(workbook) {
+        let allRows = [];
+        workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            
+            let headerRowIndex = rawData.findIndex(row => 
+                row.some(cell => String(cell).toLowerCase().includes('code') || String(cell).toLowerCase().includes('name') || String(cell).toLowerCase().includes('number') || String(cell).toLowerCase().includes('mobile'))
+            );
+
+            if (headerRowIndex !== -1) {
+                allRows = allRows.concat(XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex }));
+            } else {
+                allRows = allRows.concat(XLSX.utils.sheet_to_json(sheet));
+            }
+        });
+        return allRows;
+    }
+
+    function getFieldValue(obj, fieldKeywords) {
+        if (!obj) return 'N/A';
+        const keys = Object.keys(obj);
+        for (let keyword of fieldKeywords) {
+            const match = keys.find(k => k.trim().toLowerCase() === keyword.toLowerCase());
+            if (match && obj[match] !== undefined && obj[match] !== null && String(obj[match]).trim() !== '') return String(obj[match]).trim();
+        }
+        for (let keyword of fieldKeywords) {
+            const match = keys.find(k => k.trim().toLowerCase().includes(keyword.toLowerCase()));
+            if (match && obj[match] !== undefined && obj[match] !== null && String(obj[match]).trim() !== '') return String(obj[match]).trim();
+        }
+        return 'N/A';
+    }
+
+    function uploadMasterFile() {
+        const fileInput = document.getElementById('masterFileInput');
+        if (!fileInput.files.length) return alert('Select Master Excel file.');
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            masterSimData = parseAllWorkbookSheets(workbook);
+
+            const tx = db.transaction("masterList", "readwrite");
+            tx.objectStore("masterList").put({ key: "masterData", records: masterSimData, uploadDate: new Date().toLocaleDateString() });
+
+            tx.oncomplete = function() {
+                alert('Master SIM List uploaded!');
+                fileInput.value = '';
+                updateMasterBadge();
+                updateDashboardStats();
+            };
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function loadMasterFileFromDB() {
+        if (!db) return;
+        const tx = db.transaction("masterList", "readonly");
+        tx.objectStore("masterList").get("masterData").onsuccess = function(e) {
+            if (e.target.result) masterSimData = e.target.result.records;
+            updateMasterBadge();
+            updateDashboardStats();
+        };
+    }
+
+    function downloadMasterFile() {
+        if (!masterSimData.length) return alert('No Master SIM List found.');
+        const worksheet = XLSX.utils.json_to_sheet(masterSimData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Master_SIM_List");
+        XLSX.writeFile(workbook, "Opsonin_Master_SIM_List.xlsx");
+    }
+
+    function updateMasterBadge() {
+        const badge = document.getElementById('masterStatusBadge');
+        if (masterSimData.length > 0) {
+            badge.className = 'status-badge status-saved';
+            badge.innerText = `Saved (${masterSimData.length} records)`;
+        } else {
+            badge.className = 'status-badge status-empty';
+            badge.innerText = 'No Data';
+        }
+    }
+
+    function uploadNewFile() {
+        const fileInput = document.getElementById('monthlyBillFileInput');
+        if (!fileInput.files.length) return alert('Select an Excel file.');
+
+        const concern = document.getElementById('fileConcern').value;
+        const month = document.getElementById('fileMonth').value;
+        const year = document.getElementById('fileYear').value.trim();
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const parsedRows = parseAllWorkbookSheets(workbook);
+
+            const recordEntry = { concern, month, year, uploadDate: new Date().toLocaleDateString(), records: parsedRows };
+            const tx = db.transaction("monthlyBills", "readwrite");
+            tx.objectStore("monthlyBills").add(recordEntry);
+
+            tx.oncomplete = function() {
+                alert(`File saved successfully!`);
+                fileInput.value = '';
+                reloadStoredFiles();
+            };
+        };
+        reader.readAsArrayBuffer(fileInput.files[0]);
+    }
+
+    function reloadStoredFiles() {
+        if (!db) return;
+        const tx = db.transaction("monthlyBills", "readonly");
+        tx.objectStore("monthlyBills").getAll().onsuccess = function(e) {
+            storedFiles = e.target.result;
+            renderFileListTable();
+            updateDropdowns();
+            updateDashboardStats();
+        };
+    }
+
+    function renderFileListTable() {
+        const tbody = document.getElementById('fileListBody');
+        tbody.innerHTML = '';
+        if (!storedFiles.length) {
+            tbody.innerHTML = '<tr><td colspan="5">No stored files found.</td></tr>';
+            return;
+        }
+        storedFiles.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${item.concern}</strong></td>
+                <td>${item.month} ${item.year}</td>
+                <td>${item.records.length}</td>
+                <td>${item.uploadDate}</td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="downloadRenamedFile(${item.id})">Download</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteFileRecord(${item.id})">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function downloadRenamedFile(id) {
+        const item = storedFiles.find(f => f.id === id);
+        if (!item) return;
+        const fileName = `BL Prepaid Bill (${item.concern}-${item.month.toLowerCase()}-${item.year}).xlsx`;
+        const worksheet = XLSX.utils.json_to_sheet(item.records);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, item.concern);
+        XLSX.writeFile(workbook, fileName);
+    }
+
+    function deleteFileRecord(id) {
+        if (confirm("Delete file?")) {
+            const tx = db.transaction("monthlyBills", "readwrite");
+            tx.objectStore("monthlyBills").delete(id).onsuccess = function() { reloadStoredFiles(); };
+        }
+    }
+
+    function updateDashboardStats() {
+        document.getElementById('statMasterTotal').innerText = masterSimData.length;
+        document.getElementById('statTotalFiles').innerText = storedFiles.length;
+
+        let masterOPL = 0, masterAgrovet = 0, masterOSL = 0;
+        masterSimData.forEach(r => {
+            const str = JSON.stringify(r).toLowerCase();
+            if (str.includes('opl')) masterOPL++;
+            else if (str.includes('agrovet') || str.includes('avt')) masterAgrovet++;
+            else if (str.includes('osl')) masterOSL++;
+        });
+
+        const getLatestCount = (c) => {
+            const filtered = storedFiles.filter(f => f.concern.toLowerCase().includes(c.toLowerCase()));
+            return filtered.length ? filtered[filtered.length - 1].records.length : 0;
+        };
+
+        const activeOPL = getLatestCount('OPL');
+        const activeAgrovet = getLatestCount('Agrovet');
+        const activeOSL = getLatestCount('OSL');
+
+        document.getElementById('ratioOPL').innerText = `${activeOPL} out of ${masterOPL || 'N/A'}`;
+        document.getElementById('ratioAgrovet').innerText = `${activeAgrovet} out of ${masterAgrovet || 'N/A'}`;
+        document.getElementById('ratioOSL').innerText = `${activeOSL} out of ${masterOSL || 'N/A'}`;
+        document.getElementById('ratioTotal').innerText = `${activeOPL + activeAgrovet + activeOSL} out of ${masterSimData.length || 'N/A'}`;
+    }
+
+    function updateDropdowns() {
+        const baseSelect = document.getElementById('compareBaseSelect');
+        const targetSelect = document.getElementById('compareTargetSelect');
+        baseSelect.innerHTML = ''; targetSelect.innerHTML = '';
+        storedFiles.forEach(f => {
+            const optText = `${f.concern} - ${f.month} ${f.year}`;
+            baseSelect.appendChild(new Option(optText, f.id));
+            targetSelect.appendChild(new Option(optText, f.id));
+        });
+    }
+
+    // Compare two monthly records for Re-issue / New NIS detection.
+    // Mobile Number is the matching key. Amount must be numeric > 0 to count as paid/used.
+    function getMonthlyFile(concernKey, monthObj) {
+        return storedFiles.find(f =>
+            (f.concern.toLowerCase() === concernKey.toLowerCase() ||
+             (concernKey === 'Agrovet' && f.concern.toLowerCase().includes('avt'))) &&
+            f.month.toLowerCase() === monthObj.month.toLowerCase() &&
+            f.year === monthObj.year
+        );
+    }
+
+    function normalizeCompareValue(value) {
+        return String(value ?? '').trim().toLowerCase();
+    }
+
+    function getRecordMobile(record) {
+        return normalizeCompareValue(getFieldValue(record, ['Number', 'Mobile', 'Phone', 'Cell']));
+    }
+
+    function getRecordAmount(record) {
+        const raw = getFieldValue(record, ['Bill Amount', 'Bill', 'Amount', 'Total']);
+        const amount = parseFloat(String(raw).replace(/,/g, ''));
+        return isNaN(amount) ? 0 : amount;
+    }
+
+    function detectEmployeeCode(record, concernKey) {
+        if (!record) return '';
+
+        // Concern-specific Employee Code formats:
+        // OPL      -> PE + 5 digits
+        // OSL      -> SE + 5 digits
+        // Agrovet  -> AE + 5 digits
+        const patternMap = {
+            OPL: /\\bPE\\d{5}\\b/i,
+            OSL: /\\bSE\\d{5}\\b/i,
+            Agrovet: /\\bAE\\d{5}\\b/i
+        };
+
+        const pattern = patternMap[concernKey];
+        const preferredFields = ['E Code', 'PE Code', 'SE Code', 'AE Code', 'Employee Code', 'Code', 'ID'];
+
+        // First, inspect likely Employee Code columns.
+        for (const field of preferredFields) {
+            const keys = Object.keys(record);
+            const key = keys.find(k => k.trim().toLowerCase() === field.toLowerCase());
+            if (key) {
+                const value = String(record[key] ?? '').trim();
+                if (pattern && pattern.test(value)) return value.match(pattern)[0].toUpperCase();
+            }
+        }
+
+        // Then scan all cell values for the concern-specific code pattern.
+        if (pattern) {
+            for (const value of Object.values(record)) {
+                const match = String(value ?? '').match(pattern);
+                if (match) return match[0].toUpperCase();
+            }
+        }
+
+        return '';
+    }
+
+    function getEmployeeIdentity(record, concernKey) {
+        // "Employee Code সহ অন্যান্য সকল তথ্য" means Employee Code plus all
+        // available employee-identifying fields are compared, excluding
+        // Mobile Number and Amount.
+        return [
+            detectEmployeeCode(record, concernKey),
+            getFieldValue(record, ['Employee_Name', 'Name', 'Emp Name']),
+            getFieldValue(record, ['Desig.', 'Designation', 'Desig', 'Role', 'Title']),
+            getFieldValue(record, ['Dept.', 'Department', 'Dept', 'Division']),
+            getFieldValue(record, ['T Code', 'TCode']),
+            getFieldValue(record, ['Terri. Name', 'Territory', 'Terri']),
+            getFieldValue(record, ['Area Name', 'Area']),
+            getFieldValue(record, ['Region'])
+        ].map(normalizeCompareValue);
+    }
+
+    function calculateReissueAndNewNIS(previousFile, currentFile, concernKey) {
+        let reissueCount = 0;
+        let newNISCount = 0;
+
+        if (!currentFile) return { reissueCount, newNISCount };
+
+        const previousByMobile = new Map();
+
+        if (previousFile) {
+            previousFile.records.forEach(record => {
+                const mobile = getRecordMobile(record);
+                if (mobile && !previousByMobile.has(mobile)) {
+                    previousByMobile.set(mobile, record);
+                }
+            });
+        }
+
+        currentFile.records.forEach(currentRecord => {
+            const mobile = getRecordMobile(currentRecord);
+            if (!mobile) return;
+
+            const currentAmount = getRecordAmount(currentRecord);
+            const previousRecord = previousByMobile.get(mobile);
+
+            // No previous-month record: not enough evidence for either category.
+            if (!previousRecord) return;
+
+            const previousAmount = getRecordAmount(previousRecord);
+
+            const previousCode = normalizeCompareValue(
+                getFieldValue(previousRecord, ['E Code', 'PE Code', 'Code', 'ID'])
+            );
+            const currentCode = normalizeCompareValue(
+                getFieldValue(currentRecord, ['E Code', 'PE Code', 'Code', 'ID'])
+            );
+
+            // FINAL RE-ISSUE LOGIC:
+            // Same mobile + employee code changed + current month Amount > 0.
+            if (
+                currentAmount > 0 &&
+                previousCode !== '' &&
+                currentCode !== '' &&
+                previousCode !== currentCode
+            ) {
+                reissueCount++;
+                return;
+            }
+
+            // FINAL NEW NIS LOGIC — Condition 1:
+            // Previous month had money, current month has no money.
+            if (previousAmount > 0 && currentAmount <= 0) {
+                newNISCount++;
+                return;
+            }
+
+            // FINAL NEW NIS LOGIC — Condition 2:
+            // Both months have money, same mobile, but Employee Code AND
+            // all other employee information changed.
+            if (previousAmount > 0 && currentAmount > 0) {
+                const previousIdentity = getEmployeeIdentity(previousRecord);
+                const currentIdentity = getEmployeeIdentity(currentRecord);
+
+                const allIdentityFieldsChanged = previousIdentity.every((value, index) => {
+                    return value !== currentIdentity[index];
+                });
+
+                if (
+                    previousCode !== '' &&
+                    currentCode !== '' &&
+                    previousCode !== currentCode &&
+                    allIdentityFieldsChanged
+                ) {
+                    newNISCount++;
+                }
+            }
+        });
+
+        return { reissueCount, newNISCount };
+    }
+
+    function getPreviousMonthObject(monthObj) {
+        const d = new Date(parseInt(monthObj.year), monthList.indexOf(monthObj.month) - 1, 1);
+        return {
+            month: monthList[d.getMonth()],
+            year: String(d.getFullYear()),
+            label: `${monthList[d.getMonth()].substring(0, 3)}-${String(d.getFullYear()).substring(2)}`
+        };
+    }
+
+    function calculateConcernMonthlyValues(concernKey, monthObj, previousMonthObj) {
+        const file = getMonthlyFile(concernKey, monthObj);
+
+        if (!file) {
+            return {
+                exists: false,
+                totalSim: 0,
+                usedCount: 0,
+                unusedCount: 0,
+                totalAmt: 0,
+                grandTotalAmt: 0,
+                reissueCount: 0,
+                newNISCount: 0
+            };
+        }
+
+        let usedCount = 0;
+        let sumRowAmt = 0;
+        let grandTotalAmt = 0;
+        let totalRowMatches = [];
+
+        file.records.forEach(r => {
+            const rowStr = JSON.stringify(r).toLowerCase();
+            const b = getRecordAmount(r);
+
+            if (rowStr.includes('total') || rowStr.includes('grand total')) {
+                totalRowMatches.push(b);
+            } else {
+                if (b > 0) usedCount++;
+                sumRowAmt += b;
+            }
+        });
+
+        if (totalRowMatches.length > 0) {
+            grandTotalAmt = totalRowMatches[totalRowMatches.length - 1];
+        } else {
+            grandTotalAmt = sumRowAmt;
+        }
+
+        // Preserve the existing OPL calculation exactly.
+        const totalAmt = (concernKey === 'OPL')
+            ? Math.max(0, grandTotalAmt - 364)
+            : grandTotalAmt;
+
+        // Preserve the existing Total SIM calculation, but fall back to the
+        // current file's record count when the master list cannot identify the concern.
+        const masterMatches = masterSimData.length
+            ? masterSimData.filter(r => {
+                const row = JSON.stringify(r).toLowerCase();
+                return concernKey === 'Agrovet'
+                    ? (row.includes('agrovet') || row.includes('avt'))
+                    : row.includes(concernKey.toLowerCase());
+            }).length
+            : 0;
+
+        const totalSim = masterMatches || file.records.length;
+        const unusedCount = Math.max(0, totalSim - usedCount);
+
+        const previousFile = getMonthlyFile(concernKey, previousMonthObj);
+        const counts = calculateReissueAndNewNIS(previousFile, file, concernKey);
+
+        return {
+            exists: true,
+            totalSim,
+            usedCount,
+            unusedCount,
+            totalAmt,
+            grandTotalAmt,
+            reissueCount: counts.reissueCount,
+            newNISCount: counts.newNISCount
+        };
+    }
+
+    function generateRangeSummaryTable() {
+        const showOPL = document.getElementById('chkOPL').checked;
+        const showOSL = document.getElementById('chkOSL').checked;
+        const showAVT = document.getElementById('chkAVT').checked;
+
+        let selectedConcerns = [];
+        if (showOPL) selectedConcerns.push("OPL");
+        if (showOSL) selectedConcerns.push("OSL");
+        if (showAVT) selectedConcerns.push("Agrovet");
+
+        if (selectedConcerns.length === 0) {
+            alert('Please check at least one Concern to display.');
+            return;
+        }
+
+        const fM = parseInt(document.getElementById('fromMonthSelect').value);
+        const fY = parseInt(document.getElementById('fromYearSelect').value);
+        const tM = parseInt(document.getElementById('toMonthSelect').value);
+        const tY = parseInt(document.getElementById('toYearSelect').value);
+
+        const startDate = new Date(fY, fM, 1);
+        const endDate = new Date(tY, tM, 1);
+
+        if (startDate > endDate) {
+            alert('"From Date" cannot be greater than "To Date".');
+            return;
+        }
+
+        let targetMonths = [];
+        let curr = new Date(startDate);
+        while (curr <= endDate) {
+            const mName = monthList[curr.getMonth()];
+            const yVal = String(curr.getFullYear());
+            targetMonths.push({
+                month: mName,
+                year: yVal,
+                label: `${mName.substring(0, 3)}-${yVal.substring(2)}`
+            });
+            curr.setMonth(curr.getMonth() + 1);
+        }
+
+        const thead = document.getElementById('multiConcernThead');
+        let topHeaderRow = `<tr>`;
+        let subHeaderRow = `<tr>`;
+
+        selectedConcerns.forEach(c => {
+            const label = c === 'Agrovet' ? 'AVT' : c;
+
+            if (c === 'OPL') {
+                topHeaderRow += `<th colspan="8" class="concern-header-top">${label}</th>`;
+                subHeaderRow += `
+                    <th>Month</th>
+                    <th>Total SIM</th>
+                    <th>Total Used</th>
+                    <th>Total Unused</th>
+                    <th>Total Amount</th>
+                    <th>Grand Total Amount</th>
+                    <th>Reissue</th>
+                    <th>New NIS</th>
+                `;
+            } else {
+                topHeaderRow += `<th colspan="7" class="concern-header-top">${label}</th>`;
+                subHeaderRow += `
+                    <th>Month</th>
+                    <th>Total SIM</th>
+                    <th>Total Used</th>
+                    <th>Total Unused</th>
+                    <th>Total Amount</th>
+                    <th>Reissue</th>
+                    <th>New NIS</th>
+                `;
+            }
+        });
+
+        topHeaderRow += `<th rowspan="2" class="concern-header-top">Total in this month</th>`;
+        topHeaderRow += `</tr>`;
+        subHeaderRow += `</tr>`;
+
+        thead.innerHTML = topHeaderRow + subHeaderRow;
+
+        const tbody = document.getElementById('multiConcernTbody');
+        tbody.innerHTML = '';
+
+        let prevTracker = {};
+        selectedConcerns.forEach(c => {
+            prevTracker[c] = {
+                sim: null,
+                used: null,
+                unused: null,
+                amt: null,
+                gAmt: null,
+                reissue: null,
+                newNIS: null
+            };
+        });
+
+        targetMonths.forEach(mObj => {
+            const previousMonthObj = getPreviousMonthObject(mObj);
+            let trHtml = `<tr>`;
+            let monthlyGrandTotals = { OPL: 0, OSL: 0, Agrovet: 0 };
+
+            selectedConcerns.forEach(concernKey => {
+                const values = calculateConcernMonthlyValues(
+                    concernKey,
+                    mObj,
+                    previousMonthObj
+                );
+
+                if (values.exists) {
+                    monthlyGrandTotals[concernKey] = values.grandTotalAmt;
+
+                    const prev = prevTracker[concernKey];
+
+                    let diffSimStr = '(0)', diffUsedStr = '(0)', diffUnusedStr = '(0)';
+                    let diffAmtStr = '(0)', diffGAmtStr = '(0)';
+                    let diffReissueStr = '(0)', diffNewNISStr = '(0)';
+
+                    let clsSim = '', clsUsed = '', clsUnused = '', clsAmt = '';
+                    let clsGAmt = '', clsReissue = '', clsNewNIS = '';
+
+                    if (prev.sim !== null) {
+                        const dSim = values.totalSim - prev.sim;
+                        diffSimStr = dSim >= 0 ? `(+${dSim})` : `(${dSim})`;
+                        clsSim = dSim >= 0 ? 'val-plus' : 'val-minus';
+
+                        const dUsed = values.usedCount - prev.used;
+                        diffUsedStr = dUsed >= 0 ? `(+${dUsed})` : `(${dUsed})`;
+                        clsUsed = dUsed >= 0 ? 'val-plus' : 'val-minus';
+
+                        const dUnused = values.unusedCount - prev.unused;
+                        diffUnusedStr = dUnused >= 0 ? `(+${dUnused})` : `(${dUnused})`;
+                        clsUnused = dUnused >= 0 ? 'val-plus' : 'val-minus';
+
+                        const dAmt = values.totalAmt - prev.amt;
+                        diffAmtStr = dAmt >= 0 ? `(+${dAmt})` : `(${dAmt})`;
+                        clsAmt = dAmt >= 0 ? 'val-plus' : 'val-minus';
+
+                        if (concernKey === 'OPL' && prev.gAmt !== null) {
+                            const dGAmt = values.grandTotalAmt - prev.gAmt;
+                            diffGAmtStr = dGAmt >= 0 ? `(+${dGAmt})` : `(${dGAmt})`;
+                            clsGAmt = dGAmt >= 0 ? 'val-plus' : 'val-minus';
+                        }
+
+                        const dReissue = values.reissueCount - prev.reissue;
+                        diffReissueStr = dReissue >= 0 ? `(+${dReissue})` : `(${dReissue})`;
+                        clsReissue = dReissue >= 0 ? 'val-plus' : 'val-minus';
+
+                        const dNewNIS = values.newNISCount - prev.newNIS;
+                        diffNewNISStr = dNewNIS >= 0 ? `(+${dNewNIS})` : `(${dNewNIS})`;
+                        clsNewNIS = dNewNIS >= 0 ? 'val-plus' : 'val-minus';
+                    }
+
+                    trHtml += `
+                        <td><strong>${mObj.label}</strong></td>
+                        <td><span class="${clsSim}">${values.totalSim} ${diffSimStr}</span></td>
+                        <td><span class="${clsUsed}">${values.usedCount} ${diffUsedStr}</span></td>
+                        <td><span class="${clsUnused}">${values.unusedCount} ${diffUnusedStr}</span></td>
+                        <td><span class="${clsAmt}">${values.totalAmt} ${diffAmtStr}</span></td>
+                    `;
+
+                    if (concernKey === 'OPL') {
+                        trHtml += `<td><span class="${clsGAmt}">${values.grandTotalAmt} ${diffGAmtStr}</span></td>`;
+                    }
+
+                    trHtml += `
+                        <td><span class="${clsReissue} summary-reissue">${values.reissueCount} ${diffReissueStr}</span></td>
+                        <td><span class="${clsNewNIS} summary-newnis">${values.newNISCount} ${diffNewNISStr}</span></td>
+                    `;
+
+                    prevTracker[concernKey] = {
+                        sim: values.totalSim,
+                        used: values.usedCount,
+                        unused: values.unusedCount,
+                        amt: values.totalAmt,
+                        gAmt: values.grandTotalAmt,
+                        reissue: values.reissueCount,
+                        newNIS: values.newNISCount
+                    };
+                } else {
+                    trHtml += `<td><strong>${mObj.label}</strong></td><td>-</td><td>-</td><td>-</td><td>-</td>`;
+                    if (concernKey === 'OPL') trHtml += `<td>-</td>`;
+                    trHtml += `<td>-</td><td>-</td>`;
+                }
+            });
+
+            // Requested final column:
+            // OPL Grand Total + OSL Total + AVT Total for the same month.
+            // This is intentionally calculated from all three concerns, even if
+            // one or more concern checkboxes are not selected for display.
+            const allConcernValues = {
+                OPL: calculateConcernMonthlyValues('OPL', mObj, previousMonthObj),
+                OSL: calculateConcernMonthlyValues('OSL', mObj, previousMonthObj),
+                Agrovet: calculateConcernMonthlyValues('Agrovet', mObj, previousMonthObj)
+            };
+
+            const totalInThisMonth =
+                allConcernValues.OPL.grandTotalAmt +
+                allConcernValues.OSL.grandTotalAmt +
+                allConcernValues.Agrovet.grandTotalAmt;
+
+            trHtml += `<td class="summary-total-month">${totalInThisMonth.toLocaleString()}</td>`;
+            trHtml += `</tr>`;
+            tbody.appendChild(parseHTML(trHtml));
+        });
+
+        document.getElementById('summaryTableWrapper').style.display = 'block';
+    }
+
+    function parseHTML(html) {
+        const t = document.createElement('template');
+        t.innerHTML = html.trim();
+        return t.content.firstChild;
+    }
+
+    function exportSummaryToExcel() {
+        const table = document.getElementById('multiConcernTable');
+        if (!table || document.getElementById('summaryTableWrapper').style.display === 'none') {
+            alert('Please generate the summary table first.');
+            return;
+        }
+        const workbook = XLSX.utils.table_to_book(table, { sheet: "Monthly_Summary" });
+        XLSX.writeFile(workbook, "Multi_Concern_Monthly_Summary_Reissue_NewNIS.xlsx");
+    }
+
+    function executeComparison() {
+        const baseId = parseInt(document.getElementById('compareBaseSelect').value);
+        const targetId = parseInt(document.getElementById('compareTargetSelect').value);
+        if (isNaN(baseId) || isNaN(targetId)) return;
+
+        const baseFile = storedFiles.find(f => f.id === baseId);
+        const targetFile = storedFiles.find(f => f.id === targetId);
+
+        let baseTotalBill = 0, targetTotalBill = 0;
+        baseFile.records.forEach(r => baseTotalBill += (parseFloat(getFieldValue(r, ['Bill Amount', 'Bill', 'Amount'])) || 0));
+        targetFile.records.forEach(r => targetTotalBill += (parseFloat(getFieldValue(r, ['Bill Amount', 'Bill', 'Amount'])) || 0));
+
+        document.getElementById('comparisonResults').style.display = 'block';
+        document.getElementById('cmpBaseBill').innerText = `Tk. ${baseTotalBill.toLocaleString()}`;
+        document.getElementById('cmpTargetBill').innerText = `Tk. ${targetTotalBill.toLocaleString()}`;
+        document.getElementById('cmpBillDiff').innerText = `Tk. ${(targetTotalBill - baseTotalBill).toLocaleString()}`;
+        document.getElementById('cmpSimDiff').innerText = targetFile.records.length - baseFile.records.length;
+    }
+
+    async function copyEmail() {
+        const preview = document.getElementById('emailDraftPreview');
+        const plainText = document.getElementById('emailDraftBox').value;
+
+        if (!preview || !plainText) return;
+
+        try {
+            const htmlContent = preview.innerHTML;
+
+            if (navigator.clipboard && window.ClipboardItem) {
+                const blobHtml = new Blob([htmlContent], { type: 'text/html' });
+                const blobText = new Blob([plainText], { type: 'text/plain' });
+
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'text/html': blobHtml,
+                        'text/plain': blobText
+                    })
+                ]);
+
+                alert('Email copied! The formatted table will be preserved when pasted into supported email clients.');
+            } else {
+                const range = document.createRange();
+                range.selectNodeContents(preview);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                document.execCommand('copy');
+                selection.removeAllRanges();
+
+                alert('Email copied!');
+            }
+        } catch (error) {
+            // Fallback to the plain-text version if HTML clipboard access is unavailable.
+            const temp = document.createElement('textarea');
+            temp.value = plainText;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            temp.remove();
+            alert('Email copied as text. Your browser did not allow formatted HTML copying.');
+        }
+    }
+</script>
+</body>
+</html>
